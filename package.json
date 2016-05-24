@@ -1,0 +1,32 @@
+{
+  "name": "shooter-pong",
+  "version": "1.0.0",
+  "description": "A two-player web game with a twist.",
+  "author": "juansc",
+  "license": "ISC",
+  "dependencies": {
+    "socket.io": "^1.4.6"
+  },
+  "scripts": {
+    "test": "mocha test/vector-test.js",
+    "prebuild": "rm -rf dist",
+    "build": "babel --copy-files --out-dir dist src"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.9.0",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-stage-2": "^6.5.0",
+    "babel-register": "^6.9.0",
+    "chai": "^3.5.0",
+    "coffee-coverage": "^1.0.1",
+    "istanbul": "^0.4.3",
+    "mocha": "^2.5.1",
+    "nyc": "^6.4.4"
+  },
+  "babel": {
+    "presets": [
+      "es2015",
+      "stage-2"
+    ]
+  }
+}
