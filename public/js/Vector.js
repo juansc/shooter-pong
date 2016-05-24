@@ -152,5 +152,3 @@ class Vector {
         return this.elements.join(", ");
     }
 }
-
-module.exports = Vector;

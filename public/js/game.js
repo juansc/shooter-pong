@@ -31,7 +31,7 @@ function init() {
         startY = Math.round(Math.random()*(canvas.height-5));
 
     // Initialise the local player
-    localPlayer = new Player(startX, startY);
+    localPlayer = new Paddle(new Vector([startX, startY]), true);
     socket = io('http://localhost:8000/',{ transports: ["websocket"] });
     // Start listening for events
     setEventHandlers();
@@ -82,7 +82,7 @@ function onResize(e) {
 
 function onSocketConnected() {
     console.log("Connected to socket server");
-    socket.emit("new player", {x: localPlayer.getX(), y: localPlayer.getY()});
+    socket.emit("new player", {x: localPlayer.getPos().x, y: localPlayer.getPos().y});
 };
 
 function onSocketDisconnect() {
@@ -91,7 +91,7 @@ function onSocketDisconnect() {
 
 function onNewPlayer(data) {
     console.log("New player connected: "+data.id);
-    var newPlayer = new Player(data.x, data.y);
+    var newPlayer = new Paddle(new Vector([data.x, data.y]),false);
     newPlayer.id = data.id;
     remotePlayers.push(newPlayer);
 };
@@ -104,8 +104,7 @@ function onMovePlayer(data) {
         return;
     };
 
-    movePlayer.setX(data.x);
-    movePlayer.setY(data.y);
+    movePlayer.setPos(new Vector([data.x, data.y]));
 
 };
 
@@ -139,8 +138,8 @@ function animate() {
 function update() {
     if (localPlayer.update(keys)) {
         socket.emit("move player", {
-            x: localPlayer.getX(),
-            y: localPlayer.getY()});
+            x: localPlayer.getPos().x,
+            y: localPlayer.getPos().y});
     };
 };
 
