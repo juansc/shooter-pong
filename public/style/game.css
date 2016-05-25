@@ -2,6 +2,22 @@ body {
 	overflow: hidden;
 }
 
+header {
+    display: block;
+    text-align: center;
+    height: 46px;
+    font-family: Georgia;
+    font-size: 45px;
+    padding: 39px;
+}
+
 canvas {
 	display: block;
+	padding-left: 0;
+	padding-right: 0;
+	margin-left: auto;
+	margin-right: auto;
+	width: 800px;
+	height: 400px;
+	background-color: #ACACAC;
 }
