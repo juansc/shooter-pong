@@ -1,10 +1,11 @@
 util = require 'util'
 io = require 'socket.io'
 Player = require('./Player').Player
+GameSession = require './GameSession'
 
 # Keeps track of all player objects
 players = []
-room = []
+room_sessions = (new GameSession() for i in [1..30])
 # Current room for players
 player_current_room = {}
 socket = {}
@@ -66,7 +67,17 @@ exports.listen = (port) ->
     client.on 'disconnect', onClientDisconnect
     client.on 'new player', onNewPlayer
     client.on 'move player', onMovePlayer
-    client.join 'room 1'
-    player_current_room[client.id] = 'room 1'
+    found_room = false
+    console.log room_sessions.length
+    for session, ind in room_sessions
+      if session.getNumberOfPlayers() < 2
+        session.addPlayer client.id
+        client.join "room #{ind}"
+        player_current_room[client.id] = "room #{ind}"
+        console.log "Added #{client.id} to room #{ind}"
+        found_room = true
+        break
+    if not found_room
+      console.log "Could not find room for #{client.id}"
 
   console.log "Socket.io port listening on #{port}"

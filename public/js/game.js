@@ -1,3 +1,5 @@
+// TODO: Fix how we add new players on the client side.
+
 /**************************************************
 ** GAME VARIABLES
 **************************************************/
