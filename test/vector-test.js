@@ -1,18 +1,9 @@
 var Vector = require('../dist/Vector.js'),
-    chai = require('chai');
+    chai = require('chai'),
+    Errors = require('./testUtils').Errors(),
+    Compare = require('./testUtils').Compare();
 
 chai.should();
-
-var UnsupportedOperationError = {
-    name: "Invalid Arguments Exception",
-    message: "Unable to perform operation on given vector"
-};
-
-var VectorDimensionError = {
-    name: "Invalid Arguments Exception",
-    message: "Vectors dimensions do not match"
-};
-
 
 describe('Vector', function() {
     describe('Vector Operations', function() {
@@ -20,7 +11,7 @@ describe('Vector', function() {
             it('fails if dimensions do not match', function() {
                 var vect1 = new Vector([1]),
                     vect2 = new Vector([1,1]);
-                (function(){vect1.add(vect2);}).should.throw(VectorDimensionError);
+                (function(){vect1.add(vect2);}).should.throw(Errors.VectorDimensionError);
             });
             it('works in 1 dimension', function() {
                 var vect1 = new Vector([1]),
@@ -45,7 +36,7 @@ describe('Vector', function() {
             it('fails if dimensions do not match', function() {
                 var vect1 = new Vector([1]),
                     vect2 = new Vector([1,1]);
-                (function(){vect1.plus(vect2);}).should.throw(VectorDimensionError);
+                (function(){vect1.plus(vect2);}).should.throw(Errors.VectorDimensionError);
             });
             it('works in 1 dimension', function() {
                 var vect1 = new Vector([1]),
@@ -67,7 +58,7 @@ describe('Vector', function() {
             it('fails if dimensions do not match', function() {
                 var vect1 = new Vector([1]),
                     vect2 = new Vector([1,1]);
-                (function(){vect1.subtract(vect2);}).should.throw(VectorDimensionError);
+                (function(){vect1.subtract(vect2);}).should.throw(Errors.VectorDimensionError);
             });
             it('works in 1 dimension', function() {
                 var vect1 = new Vector([1]),
@@ -92,7 +83,7 @@ describe('Vector', function() {
             it('fails if dimensions do not match', function() {
                 var vect1 = new Vector([1]),
                     vect2 = new Vector([1,1]);
-                (function(){vect1.minus(vect2);}).should.throw(VectorDimensionError);
+                (function(){vect1.minus(vect2);}).should.throw(Errors.VectorDimensionError);
             });
             it('works in 1 dimension', function() {
                 var vect1 = new Vector([1]),
@@ -121,7 +112,7 @@ describe('Vector', function() {
             it('fails if dimensions do not match', function() {
                 var vect1 = new Vector([1]),
                     vect2 = new Vector([1,1]);
-                (function(){vect1.distance(vect2);}).should.throw(VectorDimensionError);
+                (function(){vect1.distance(vect2);}).should.throw(Errors.VectorDimensionError);
             });
             it('works in 1 dimension', function() {
                 var vect1 = new Vector([1]),
@@ -143,7 +134,7 @@ describe('Vector', function() {
             it('fails if dimensions do not match', function() {
                 var vect1 = new Vector([1]),
                     vect2 = new Vector([1,1]);
-                (function(){vect1.dot(vect2);}).should.throw(VectorDimensionError);
+                (function(){vect1.dot(vect2);}).should.throw(Errors.VectorDimensionError);
             });
             it('works in 1 dimension', function() {
                 var vect1 = new Vector([1]),
@@ -179,10 +170,10 @@ describe('Vector', function() {
                 vect2.normalize();
                 vect3.normalize();
                 vect4.normalize();
-                compare_vects_with_tol(vect1, norm_vect1, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect2, norm_vect2, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect3, norm_vect3, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect4, norm_vect4, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect1, norm_vect1, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect2, norm_vect2, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect3, norm_vect3, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect4, norm_vect4, TOLERANCE).should.equal(true);
             });
             it('works if vector has magnitude > 1', function() {
                 var vect1 = new Vector([5]),
@@ -193,10 +184,10 @@ describe('Vector', function() {
                 vect2.normalize();
                 vect3.normalize();
                 vect4.normalize();
-                compare_vects_with_tol(vect1, norm_vect1, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect2, norm_vect2, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect3, norm_vect3, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect4, norm_vect4, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect1, norm_vect1, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect2, norm_vect2, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect3, norm_vect3, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect4, norm_vect4, TOLERANCE).should.equal(true);
             });
             it('works if vector has magnitude < 1', function() {
                 var vect1 = new Vector([0.1]),
@@ -207,10 +198,10 @@ describe('Vector', function() {
                 vect2.normalize();
                 vect3.normalize();
                 vect4.normalize();
-                compare_vects_with_tol(vect1, norm_vect1, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect2, norm_vect2, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect3, norm_vect3, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect4, norm_vect4, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect1, norm_vect1, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect2, norm_vect2, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect3, norm_vect3, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect4, norm_vect4, TOLERANCE).should.equal(true);
             });
         });
         describe('Normal Copy', function() {
@@ -224,30 +215,30 @@ describe('Vector', function() {
                     vect2 = norm_vect2.normalCopy(),
                     vect3 = norm_vect3.normalCopy(),
                     vect4 = norm_vect4.normalCopy();
-                compare_vects_with_tol(vect1, norm_vect1, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect2, norm_vect2, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect3, norm_vect3, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect4, norm_vect4, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect1, norm_vect1, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect2, norm_vect2, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect3, norm_vect3, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect4, norm_vect4, TOLERANCE).should.equal(true);
             });
             it('works if vector has magnitude > 1', function() {
                 var vect1 = (new Vector([5])).normalCopy(),
                     vect2 = (new Vector([5,0])).normalCopy(),
                     vect3 = (new Vector([10,0,0])).normalCopy(),
                     vect4 = (new Vector([10,10])).normalCopy();
-                compare_vects_with_tol(vect1, norm_vect1, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect2, norm_vect2, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect3, norm_vect3, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect4, norm_vect4, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect1, norm_vect1, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect2, norm_vect2, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect3, norm_vect3, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect4, norm_vect4, TOLERANCE).should.equal(true);
             });
             it('works if vector has magnitude < 1', function() {
                 var vect1 = (new Vector([0.1])).normalCopy(),
                     vect2 = (new Vector([0.5,0])).normalCopy(),
                     vect3 = (new Vector([0.1,0,0])).normalCopy(),
                     vect4 = (new Vector([0.2,0.2])).normalCopy();
-                compare_vects_with_tol(vect1, norm_vect1, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect2, norm_vect2, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect3, norm_vect3, TOLERANCE).should.equal(true);
-                compare_vects_with_tol(vect4, norm_vect4, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect1, norm_vect1, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect2, norm_vect2, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect3, norm_vect3, TOLERANCE).should.equal(true);
+                Compare.vects_with_tol(vect4, norm_vect4, TOLERANCE).should.equal(true);
             });
         });
     });
@@ -313,15 +304,3 @@ describe('Vector', function() {
         });
     });
 });
-
-var compare_vects_with_tol = function(vect1, vect2, tol) {
-    if(vect1.dim !== vect2.dim) {
-        return false;
-    }
-    for(var i = 0; i < vect1.dim; i++) {
-        if(Math.abs(vect1.elements[i] - vect2.elements[i]) > tol) {
-            return false;
-        }
-    }
-    return true;
-}
