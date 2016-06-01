@@ -86,7 +86,7 @@ function onSocketDisconnect() {
 
 function onNewPlayer(data) {
     console.log("New player connected: " + data.id);
-    var newPlayer = new Paddle(new Vector([data.x, data.y]), data.isFirstPlayer);
+    var newPlayer = new Paddle(new Vector([data.x, data.y]), data.orientation);
     newPlayer.id = data.id;
     remotePlayers.push(newPlayer);
 };

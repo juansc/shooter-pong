@@ -37,7 +37,6 @@ var Paddle = function(pos, orientation) {
 
     var draw = (ctx) => {
         var points = getPointsToDraw(isFacingLeft());
-        console.log(isFacingLeft());
 
         ctx.save();
         ctx.beginPath();

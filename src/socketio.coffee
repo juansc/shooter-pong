@@ -30,7 +30,7 @@ onNewPlayer = (data) ->
     id: newPlayer.id,
     x: newPlayer.getX()
     y: newPlayer.getY()
-    orientation: data.orientation
+    orientation: data.isFacingLeft
   for player in players
     # This emits to only the current player
     if player_current_room[player.id] is room
@@ -38,7 +38,7 @@ onNewPlayer = (data) ->
         id: player.id
         x: player.getX()
         y: player.getY()
-        orientation: player.getOrientation()
+        orientation: player.orientation
   players.push newPlayer
 
 
