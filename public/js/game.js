@@ -8,7 +8,9 @@ var canvas,         // Canvas DOM element
     keys,           // Keyboard input
     localPlayer,    // Local player
     remotePlayers,  // Remote players
-    socket;         // Player socket
+    socket,         // Player socket
+    ARENA_WIDTH = 1000,
+    ARENA_HEIGHT = 1000;
 
 
 /**************************************************
@@ -23,18 +25,9 @@ function init() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    // Initialise keyboard controls
-    keys = new Keys();
-
-    // Calculate a random start position for the local player
-    // The minus 5 (half a player size) stops the player being
-    // placed right on the egde of the screen
-    var startX = Math.round(Math.random()*(canvas.width-5)),
-        startY = Math.round(Math.random()*(canvas.height-5));
-
     // Initialise the local player
-    localPlayer = new Paddle(new Vector([startX, startY]), true);
     socket = io('http://localhost:8000/',{ transports: ["websocket"] });
+
     // Start listening for events
     setEventHandlers();
     remotePlayers = [];
@@ -59,6 +52,7 @@ var setEventHandlers = function() {
     socket.on("new player", onNewPlayer);
     socket.on("move player", onMovePlayer);
     socket.on("remove player", onRemovePlayer);
+    socket.on("added to room", onAddedToRoom);
 };
 
 // Keyboard key down
@@ -84,7 +78,6 @@ function onResize(e) {
 
 function onSocketConnected() {
     console.log("Connected to socket server");
-    socket.emit("new player", {x: localPlayer.getPos().x, y: localPlayer.getPos().y});
 };
 
 function onSocketDisconnect() {
@@ -92,8 +85,8 @@ function onSocketDisconnect() {
 };
 
 function onNewPlayer(data) {
-    console.log("New player connected: "+data.id);
-    var newPlayer = new Paddle(new Vector([data.x, data.y]),false);
+    console.log("New player connected: " + data.id);
+    var newPlayer = new Paddle(new Vector([data.x, data.y]), data.isFirstPlayer);
     newPlayer.id = data.id;
     remotePlayers.push(newPlayer);
 };
@@ -121,6 +114,25 @@ function onRemovePlayer(data) {
 
     remotePlayers.splice(remotePlayers.indexOf(removePlayer), 1);
 };
+
+function onAddedToRoom(data) {
+    var isFirstPlayer = data.isFirstPlayer,
+        playerX, playerY;
+
+    playerX = isFirstPlayer ? 20: ARENA_WIDTH - 20;
+    playerY = ARENA_HEIGHT / 2;
+    localPlayer = new Paddle(new Vector([playerX, playerY]), isFirstPlayer);
+
+    socket.emit("new player", {
+        x: localPlayer.getPos().x,
+        y: localPlayer.getPos().y,
+        isFacingLeft: isFirstPlayer
+    });
+
+    keys = new Keys();
+    animate();
+
+}
 
 /**************************************************
 ** GAME ANIMATION LOOP

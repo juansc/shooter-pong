@@ -22,7 +22,7 @@ onClientDisconnect = ->
 
 
 onNewPlayer = (data) ->
-  newPlayer = new Player data.x, data.y
+  newPlayer = new Player data.x, data.y, data.isFacingLeft
   newPlayer.id = this.id
   room = player_current_room[this.id]
   # This emits to all but the current player
@@ -30,12 +30,15 @@ onNewPlayer = (data) ->
     id: newPlayer.id,
     x: newPlayer.getX()
     y: newPlayer.getY()
+    orientation: data.orientation
   for player in players
     # This emits to only the current player
-    this.emit 'new player',
-      id: player.id
-      x: player.getX()
-      y: player.getY()
+    if player_current_room[player.id] is room
+      this.emit 'new player',
+        id: player.id
+        x: player.getX()
+        y: player.getY()
+        orientation: player.getOrientation()
   players.push newPlayer
 
 
@@ -68,14 +71,18 @@ exports.listen = (port) ->
     client.on 'new player', onNewPlayer
     client.on 'move player', onMovePlayer
     found_room = false
-    console.log room_sessions.length
     for session, ind in room_sessions
-      if session.getNumberOfPlayers() < 2
+      players_in_room = session.getNumberOfPlayers()
+      if players_in_room < 2
         session.addPlayer client.id
         client.join "room #{ind}"
         player_current_room[client.id] = "room #{ind}"
         console.log "Added #{client.id} to room #{ind}"
         found_room = true
+        first_in_room = players_in_room is 1
+        console.log "This player is#{if first_in_room then 'nt' else ''} the first person"
+        console.log first_in_room
+        client.emit 'added to room', isFirstPlayer: first_in_room
         break
     if not found_room
       console.log "Could not find room for #{client.id}"

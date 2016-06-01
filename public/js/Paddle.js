@@ -1,6 +1,6 @@
-var Paddle = function(pos, isFacingLeft) {
+var Paddle = function(pos, orientation) {
     var pos = pos,
-        isFacingLeft = isFacingLeft,
+        orientation = orientation,
         id,
         speed = 2,
         height = 50,
@@ -10,7 +10,7 @@ var Paddle = function(pos, isFacingLeft) {
 
     var getPos = () => {return pos};
     var setPos = (newPos) => {pos = newPos};
-    var getOrientation = () => {return isFacingLeft};
+    var isFacingLeft = () => {return orientation};
 
     var collidingWithWall = () => {return false;}
 
@@ -36,7 +36,8 @@ var Paddle = function(pos, isFacingLeft) {
     };
 
     var draw = (ctx) => {
-        var points = getPointsToDraw(isFacingLeft);
+        var points = getPointsToDraw(isFacingLeft());
+        console.log(isFacingLeft());
 
         ctx.save();
         ctx.beginPath();
@@ -45,12 +46,12 @@ var Paddle = function(pos, isFacingLeft) {
         ctx.lineTo(points[2].x, points[2].y);
         ctx.lineTo(points[3].x, points[3].y);
         ctx.closePath();
-        ctx.fillStyle = isFacingLeft ? "red":"blue";
+        ctx.fillStyle = isFacingLeft() ? "red":"blue";
         ctx.fill();
         ctx.restore();
     };
 
-    var getPointsToDraw = (isFacingLeft) => {
+    var getPointsToDraw = (orientation) => {
         var points = [],
             currentPos = getPos(),
             p1x, p1y, p2x, p2y,
@@ -60,7 +61,7 @@ var Paddle = function(pos, isFacingLeft) {
         p1y = currentPos.y;
         p2x = p1x;
         p2y = p1y + height;
-        p3x = p2x + width*(isFacingLeft ? -1: 1);
+        p3x = p2x + width*(orientation ? -1: 1);
         p3y = p2y + ySlant;
         p4x = p3x;
         p4y = p1y - ySlant;
