@@ -6,7 +6,7 @@ class Player
     @x = startX
     @y = startY
     @id = 0
-    @orientation = isOnLeft
+    @orientation = if isOnLeft then ON_LEFT else ON_RIGHT
 
   getX: => @x
   getY: => @y

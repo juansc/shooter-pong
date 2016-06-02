@@ -57,30 +57,40 @@ playerByID = (id) ->
     return [player, ind] if player.id is id
   return [null, -1]
 
+onReadyUp = (data) ->
+  room = player_current_room[this.id]
+
 addClientToRoom = (client) ->
   found_room = false
-  for session, ind in room_sessions
+  for session, room_number in room_sessions
     players_in_room = session.getNumberOfPlayers()
     if players_in_room < 2
       first_in_room = players_in_room is 0
       session.addPlayer client.id
-      client.join "room #{ind}"
-      player_current_room[client.id] = "room #{ind}"
-      console.log "Added #{client.id} to room #{ind}"
+      client.join "room #{room_number}"
+      player_current_room[client.id] = "room #{room_number}"
+      console.log "Added #{client.id} to room #{room_number}"
       client.emit 'added to room', isOnLeft: first_in_room
-      return found_room = true
-  found_room
+      found_room = true
+      room_full = not first_in_room
+      return [found_room, room_number, room_full]
+  return [found_room, -1, false, false]
 
 onClientConnected = (client) ->
   util.log "New player has connected: #{client.id}"
   addCallbacksToClient client
-  found_room = addClientToRoom client
-  console.log "Could not find room for #{client.id}" if not found_room
+  [found_room, room, room_full] = addClientToRoom client
+  return console.log "Could not find room for #{client.id}" if not found_room
+  if room_full
+    socket.in("room #{room}").emit 'start game'
+
+
 
 addCallbacksToClient = (client) ->
   client.on 'disconnect', onClientDisconnect
   client.on 'new player', onNewPlayer
   client.on 'move player', onMovePlayer
+  client.on 'ready up', onReadyUp
 
 exports.listen = (port) ->
   players = []

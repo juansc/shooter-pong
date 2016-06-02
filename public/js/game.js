@@ -9,12 +9,10 @@ var canvas,         // Canvas DOM element
     localPlayer,    // Local player
     remotePlayers,  // Remote players
     socket,         // Player socket
-    ARENA_WIDTH = 800,
-    ARENA_HEIGHT = 400,
-    DISTANCE_TO_EDGE = 20,
-    STARTING_Y = ARENA_HEIGHT / 2,
-    STARTING_X_LEFT = DISTANCE_TO_EDGE,
-    STARTING_X_RIGHT = ARENA_WIDTH - DISTANCE_TO_EDGE;
+    gameState,
+    showMessage = true,
+    GameStates,
+    GameConstants;
 
 
 /**************************************************
@@ -24,6 +22,11 @@ function init() {
     // Declare the canvas and rendering context
     canvas = document.getElementById("gameCanvas");
     ctx = canvas.getContext("2d");
+    GameStates = GameStates();
+    GameConstants = GameConstants();
+
+    gameState = GameStates.WAITING_FOR_OTHER_PLAYER;
+
 
     // Initialise the local player
     socket = io('http://localhost:8000/',{ transports: ["websocket"] });
@@ -53,6 +56,7 @@ var setEventHandlers = function() {
     socket.on("move player", onMovePlayer);
     socket.on("remove player", onRemovePlayer);
     socket.on("added to room", onAddedToRoom);
+    socket.on("start game", onStartGame);
 };
 
 // Keyboard key down
@@ -119,8 +123,8 @@ function onAddedToRoom(data) {
     var isOnLeft = data.isOnLeft,
         playerX, playerY;
 
-    playerX = isOnLeft ? STARTING_X_LEFT : STARTING_X_RIGHT;
-    playerY = ARENA_HEIGHT / 2;
+    playerX = isOnLeft ? GameConstants.STARTING_X_LEFT : GameConstants.STARTING_X_RIGHT;
+    playerY = GameConstants.STARTING_Y;
     localPlayer = new Paddle(new Vector([playerX, playerY]), isOnLeft);
 
     socket.emit("new player", {
@@ -132,7 +136,21 @@ function onAddedToRoom(data) {
     keys = new Keys();
     animate();
 
+};
+
+function hideWaitingForPlayerMessage() {
+    showMessage = false;
+    console.log("Hid waiting for players message");
 }
+
+function onStartGame() {
+    hideWaitingForPlayerMessage();
+    gameState = GameStates.ROUND_START;
+};
+
+
+
+
 
 /**************************************************
 ** GAME ANIMATION LOOP
@@ -174,7 +192,16 @@ function playerById(id) {
 function draw() {
     // Wipe the canvas clean
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+    if(showMessage) {
+        ctx.save();
+        ctx.font = "30px Comic Sans MS";
+        ctx.fillStyle = "red";
+        ctx.textAlign = "center";
+        ctx.fillText("Waiting for other player...",
+            GameConstants.ARENA_WIDTH / 2,
+            GameConstants.ARENA_HEIGHT / 2);
+        ctx.restore();
+    }
     // Draw the local player
     localPlayer.draw(ctx);
     for (var i = 0; i < remotePlayers.length; i++) {
