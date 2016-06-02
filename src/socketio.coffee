@@ -57,9 +57,7 @@ playerByID = (id) ->
     return [player, ind] if player.id is id
   return [null, -1]
 
-onClientConnected = (client) ->
-  util.log "New player has connected: #{client.id}"
-  addCallbacksToClient client
+addClientToRoom = (client) ->
   found_room = false
   for session, ind in room_sessions
     players_in_room = session.getNumberOfPlayers()
@@ -70,10 +68,14 @@ onClientConnected = (client) ->
       player_current_room[client.id] = "room #{ind}"
       console.log "Added #{client.id} to room #{ind}"
       client.emit 'added to room', isOnLeft: first_in_room
-      found_room = true
-      break
-  if not found_room
-    console.log "Could not find room for #{client.id}"
+      return found_room = true
+  found_room
+
+onClientConnected = (client) ->
+  util.log "New player has connected: #{client.id}"
+  addCallbacksToClient client
+  found_room = addClientToRoom client
+  console.log "Could not find room for #{client.id}" if not found_room
 
 addCallbacksToClient = (client) ->
   client.on 'disconnect', onClientDisconnect
@@ -82,10 +84,7 @@ addCallbacksToClient = (client) ->
 
 exports.listen = (port) ->
   players = []
-  socket = io port, {
-    "transports": ["websocket"]
-  }
-
+  socket = io port, {transports: ["websocket"]}
   socket.sockets.on 'connection', onClientConnected
 
   console.log "Socket.io port listening on #{port}"

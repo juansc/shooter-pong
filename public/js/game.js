@@ -92,27 +92,27 @@ function onNewPlayer(data) {
 };
 
 function onMovePlayer(data) {
-    var movePlayer = playerById(data.id);
+    var playerToMove = playerById(data.id);
 
-    if (!movePlayer) {
+    if (!playerToMove) {
         console.log("Player not found: "+data.id);
         return;
     };
 
-    movePlayer.setPos(new Vector([data.x, data.y]));
+    playerToMove.setPos(new Vector([data.x, data.y]));
 
 };
 
 function onRemovePlayer(data) {
     console.log(data)
-    var removePlayer = playerById(data.id);
+    var playerToRemove = playerById(data.id);
 
-    if (!removePlayer) {
+    if (!playerToRemove) {
         console.log("Player not found: " + data.id);
         return;
     };
 
-    remotePlayers.splice(remotePlayers.indexOf(removePlayer), 1);
+    remotePlayers.splice(remotePlayers.indexOf(playerToRemove), 1);
 };
 
 function onAddedToRoom(data) {
@@ -160,8 +160,9 @@ function update() {
 function playerById(id) {
     var i;
     for (i = 0; i < remotePlayers.length; i++) {
-        if (remotePlayers[i].id == id)
+        if (remotePlayers[i].id == id) {
             return remotePlayers[i];
+        }
     };
 
     return false;
