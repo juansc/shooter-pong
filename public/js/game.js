@@ -9,8 +9,12 @@ var canvas,         // Canvas DOM element
     localPlayer,    // Local player
     remotePlayers,  // Remote players
     socket,         // Player socket
-    ARENA_WIDTH = 1000,
-    ARENA_HEIGHT = 1000;
+    ARENA_WIDTH = 800,
+    ARENA_HEIGHT = 400,
+    DISTANCE_TO_EDGE = 20,
+    STARTING_Y = ARENA_HEIGHT / 2,
+    STARTING_X_LEFT = DISTANCE_TO_EDGE,
+    STARTING_X_RIGHT = ARENA_WIDTH - DISTANCE_TO_EDGE;
 
 
 /**************************************************
@@ -20,10 +24,6 @@ function init() {
     // Declare the canvas and rendering context
     canvas = document.getElementById("gameCanvas");
     ctx = canvas.getContext("2d");
-
-    // Maximise the canvas
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
 
     // Initialise the local player
     socket = io('http://localhost:8000/',{ transports: ["websocket"] });
@@ -45,7 +45,7 @@ var setEventHandlers = function() {
     window.addEventListener("keyup", onKeyup, false);
 
     // Window resize
-    window.addEventListener("resize", onResize, false);
+    //window.addEventListener("resize", onResize, true);
 
     socket.on("connect", onSocketConnected);
     socket.on("disconnect", onSocketDisconnect);
@@ -72,8 +72,8 @@ function onKeyup(e) {
 // Browser window resize
 function onResize(e) {
     // Maximise the canvas
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = ARENA_WIDTH;
+    canvas.height = ARENA_HEIGHT;
 };
 
 function onSocketConnected() {
@@ -86,7 +86,7 @@ function onSocketDisconnect() {
 
 function onNewPlayer(data) {
     console.log("New player connected: " + data.id);
-    var newPlayer = new Paddle(new Vector([data.x, data.y]), data.orientation);
+    var newPlayer = new Paddle(new Vector([data.x, data.y]), data.isOnLeft);
     newPlayer.id = data.id;
     remotePlayers.push(newPlayer);
 };
@@ -116,17 +116,17 @@ function onRemovePlayer(data) {
 };
 
 function onAddedToRoom(data) {
-    var isFirstPlayer = data.isFirstPlayer,
+    var isOnLeft = data.isOnLeft,
         playerX, playerY;
 
-    playerX = isFirstPlayer ? 20: ARENA_WIDTH - 20;
+    playerX = isOnLeft ? STARTING_X_LEFT : STARTING_X_RIGHT;
     playerY = ARENA_HEIGHT / 2;
-    localPlayer = new Paddle(new Vector([playerX, playerY]), isFirstPlayer);
+    localPlayer = new Paddle(new Vector([playerX, playerY]), isOnLeft);
 
     socket.emit("new player", {
         x: localPlayer.getPos().x,
         y: localPlayer.getPos().y,
-        isFacingLeft: isFirstPlayer
+        isOnLeft: isOnLeft
     });
 
     keys = new Keys();

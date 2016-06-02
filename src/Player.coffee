@@ -1,16 +1,17 @@
 class Player
-  constructor: (startX, startY, orientation) ->
+  ON_LEFT = 0
+  ON_RIGHT = 1
+
+  constructor: (startX, startY, isOnLeft) ->
     @x = startX
     @y = startY
     @id = 0
-    @orientation = orientation
+    @orientation = isOnLeft
 
   getX: => @x
   getY: => @y
   setX: (newX) => @x = newX
   setY: (newY) => @y = newY
-  getOrientation: =>
-    console.log @orientation
-    @orientation
+  isOnLeft: => @orientation is ON_LEFT
 
 exports.Player = Player

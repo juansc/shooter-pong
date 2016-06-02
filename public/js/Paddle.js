@@ -1,16 +1,19 @@
-var Paddle = function(pos, orientation) {
+var Paddle = function(pos, isOnLeft) {
     var pos = pos,
-        orientation = orientation,
         id,
         speed = 2,
         height = 50,
         width = 10,
-        ySlant = 10;
+        ySlant = 10,
+        ON_LEFT = 0,
+        ON_RIGHT = 1,
+        orientation;
 
+    orientation = isOnLeft ? ON_LEFT:ON_RIGHT;
 
     var getPos = () => {return pos};
     var setPos = (newPos) => {pos = newPos};
-    var isFacingLeft = () => {return orientation};
+    var isOnLeft = () => {return orientation === ON_LEFT};
 
     var collidingWithWall = () => {return false;}
 
@@ -36,7 +39,7 @@ var Paddle = function(pos, orientation) {
     };
 
     var draw = (ctx) => {
-        var points = getPointsToDraw(isFacingLeft());
+        var points = getPointsToDraw(isOnLeft());
 
         ctx.save();
         ctx.beginPath();
@@ -45,7 +48,7 @@ var Paddle = function(pos, orientation) {
         ctx.lineTo(points[2].x, points[2].y);
         ctx.lineTo(points[3].x, points[3].y);
         ctx.closePath();
-        ctx.fillStyle = isFacingLeft() ? "red":"blue";
+        ctx.fillStyle = isOnLeft() ? "red":"blue";
         ctx.fill();
         ctx.restore();
     };
@@ -77,6 +80,7 @@ var Paddle = function(pos, orientation) {
         getPos: getPos,
         setPos: setPos,
         update: update,
-        draw: draw
+        draw: draw,
+        isOnLeft: isOnLeft
     }
 };
