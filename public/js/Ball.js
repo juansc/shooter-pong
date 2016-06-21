@@ -1,34 +1,30 @@
-var Ball = function(pos, vel) {
+var Ball = function(pos, vel, radius) {
     var pos = pos,
         vel = vel,
-        radius = 5;
+        radius = radius || 10,
+        currentPos,
+        currentVel;
 
-    var getPos = () => {return x};
-    var getVel = () => {return y};
+    var getPos = () => {return pos};
+    var getVel = () => {return vel};
     var setPos = (newPos) => {pos = newPos};
     var setVel = (newVel) => {vel = newVel};
 
-
     var update = () => {
-        if(collidingWithWall()) {
-            handleWallCollision();
-        } else if (collidingWithPlayer()) {
-            handlePlayerCollision();
-        } else {
-            currentPos = getPos();
-            currentVel = getVel();
-            currentPos.add(currentVel);
-        }
+        currentPos = getPos();
+        currentVel = getVel();
+        currentPos.add(currentVel);
     };
 
     var draw = (ctx) => {
         currentPos = getPos();
-        currentX = currentPos.elements[0];
-        currentY = currentPos.elements[1];
+        var currentX = currentPos.x,
+            currentY = currentPos.y;
         ctx.save();
-        ctx.fillStyle("red");
+
         ctx.beginPath();
-        ctx.arc(currentX,currentY,
+        ctx.fillStyle = "red";
+        ctx.arc(currentX, currentY,
                 radius, 0, 2 * Math.PI);
         ctx.stroke();
         ctx.fill();
