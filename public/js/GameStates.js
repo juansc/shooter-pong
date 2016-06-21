@@ -1,8 +1,10 @@
 GameStates = function() {
     return {
         WAITING_FOR_OTHER_PLAYER: 0,
-        ACTIVE_GAME: 1,
-        GAME_OVER: 2,
-        ROUND_START: 3
+        STARTING_GAME: 1,
+        ROUND_START: 5,
+        ACTIVE_ROUND: 2,
+        PLAYER_SCORED: 3,
+        GAME_OVER: 4
     };
 };
