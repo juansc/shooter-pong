@@ -4,7 +4,9 @@ Player = require('./Player').Player
 GameSession = require './GameSession'
 
 players = []
-room_sessions = (new GameSession() for i in [1..30])
+# Array of room_sessions indexed by 0-29
+room_sessions = (new GameSession(null, i - 1) for i in [1..30])
+# Map from player ID to 0-29
 player_current_room = {}
 socket = {}
 
@@ -14,8 +16,12 @@ onClientDisconnect = ->
   [player, ind] = playerByID this.id
   return util.log "Could not find player #{this.id}" if ind is -1
 
-  players.splice ind, 1
   room = player_current_room[this.id]
+  player_session = player.gameSession
+  player_session.removePlayer player.id
+
+  players.splice ind, 1
+
   this.broadcast.to(room).emit 'remove player', id: this.id
 
 
@@ -23,8 +29,10 @@ onNewPlayer = (data) ->
   newPlayer = new Player data.x, data.y, data.isOnLeft
   newPlayer.id = this.id
   room = player_current_room[this.id]
+  newPlayer.setGameSession room_sessions[room]
+
   # This emits to all but the current player
-  this.broadcast.to(room).emit 'new player',
+  this.broadcast.to("room #{room}").emit 'new player',
     id: newPlayer.id,
     x: newPlayer.getX()
     y: newPlayer.getY()
@@ -42,12 +50,13 @@ onNewPlayer = (data) ->
 
 onMovePlayer = (data) ->
   [movePlayer, ind] = playerByID this.id
-  return console.log "Player not found: #{this.id}" unless movePlayer
+  return console.log "Player not found: #{this.id}" if ind is -1
 
   movePlayer.setX data.x
   movePlayer.setY data.y
   room = player_current_room[this.id]
-  this.broadcast.to(room).emit "move player",
+
+  this.broadcast.to("room #{room}").emit "move player",
     id: movePlayer.id
     x: movePlayer.getX()
     y: movePlayer.getY()
@@ -68,13 +77,14 @@ addClientToRoom = (client) ->
       first_in_room = players_in_room is 0
       session.addPlayer client.id
       client.join "room #{room_number}"
-      player_current_room[client.id] = "room #{room_number}"
+      player_current_room[client.id] = room_number
       console.log "Added #{client.id} to room #{room_number}"
       client.emit 'added to room', isOnLeft: first_in_room
       found_room = true
       room_full = not first_in_room
       return [found_room, room_number, room_full]
-  return [found_room, -1, false, false]
+
+  return [found_room, -1, false]
 
 onClientConnected = (client) ->
   util.log "New player has connected: #{client.id}"
@@ -83,8 +93,6 @@ onClientConnected = (client) ->
   return console.log "Could not find room for #{client.id}" if not found_room
   if room_full
     socket.in("room #{room}").emit 'start game'
-
-
 
 addCallbacksToClient = (client) ->
   client.on 'disconnect', onClientDisconnect

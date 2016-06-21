@@ -1,5 +1,3 @@
-// TODO: Fix how we add new players on the client side.
-
 /**************************************************
 ** GAME VARIABLES
 **************************************************/
@@ -134,7 +132,7 @@ function onAddedToRoom(data) {
     });
 
     keys = new Keys();
-    animate();
+    gameLoop();
 
 };
 
@@ -155,12 +153,12 @@ function onStartGame() {
 /**************************************************
 ** GAME ANIMATION LOOP
 **************************************************/
-function animate() {
+function gameLoop() {
     update();
     draw();
 
     // Request a new animation frame using Paul Irish's shim
-    window.requestAnimFrame(animate);
+    window.requestAnimFrame(gameLoop);
 };
 
 

@@ -12,6 +12,7 @@ class Player
   getY: => @y
   setX: (newX) => @x = newX
   setY: (newY) => @y = newY
+  setGameSession: (gameSession) => @gameSession = gameSession
   isOnLeft: => @orientation is ON_LEFT
 
 exports.Player = Player

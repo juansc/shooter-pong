@@ -2,12 +2,14 @@ var Paddle = function(pos, isOnLeft) {
     var pos = pos,
         id,
         speed = 2,
-        height = 50,
+        height = 80,
         width = 10,
         ySlant = 10,
         ON_LEFT = 0,
         ON_RIGHT = 1,
-        orientation;
+        orientation,
+        MAX_Y = 400 - height,
+        MIN_Y = 0;
 
     orientation = isOnLeft ? ON_LEFT:ON_RIGHT;
 
@@ -16,7 +18,6 @@ var Paddle = function(pos, isOnLeft) {
     var isOnLeft = () => {return orientation === ON_LEFT};
 
     var collidingWithWall = () => {return false;}
-
 
     var update = (keys) => {
         var currentPos = getPos(),
@@ -27,9 +28,9 @@ var Paddle = function(pos, isOnLeft) {
             positionChanged = handleWallCollision();
         } else{
             if (keys.up && !keys.down) {
-                currentPos.elements[1] -= speed;
+                currentPos.elements[1] = Math.max(prevY - speed, MIN_Y);
             } else if (keys.down && !keys.up) {
-                currentPos.elements[1] += speed;
+                currentPos.elements[1] = Math.min(prevY + speed, MAX_Y);
             } else{
                 positionChanged = false;
             };
@@ -63,10 +64,10 @@ var Paddle = function(pos, isOnLeft) {
         p1y = currentPos.y;
         p2x = p1x;
         p2y = p1y + height;
-        p3x = p2x + width*(orientation ? -1: 1);
-        p3y = p2y + ySlant;
+        p3x = p2x + width*(orientation ? 1: -1);
+        p3y = p2y - ySlant;
         p4x = p3x;
-        p4y = p1y - ySlant;
+        p4y = p1y + ySlant;
         points = [
             {x:p1x,y:p1y},
             {x:p2x,y:p2y},
