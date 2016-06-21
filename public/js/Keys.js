@@ -14,40 +14,36 @@ var Keys = function(up, left, right, down) {
 		down = down || false;
 
 	var onKeyDown = function(e) {
-		var that = this,
-			c = e.keyCode;
-		switch (c) {
+		switch (e.keyCode) {
 			// Controls
 			case LEFT_KEY: // Left
-				that.left = true;
+				this.left = true;
 				break;
 			case UP_KEY: // Up
-				that.up = true;
+				this.up = true;
 				break;
 			case RIGHT_KEY: // Right
-				that.right = true; // Will take priority over the left key
+				this.right = true; // Will take priority over the left key
 				break;
 			case DOWN_KEY: // Down
-				that.down = true;
+				this.down = true;
 				break;
 		};
 	};
 
 	var onKeyUp = function(e) {
-		var that = this,
-			c = e.keyCode;
-		switch (c) {
-			case LEFT_KEY: // Left
-				that.left = false;
+		switch(e.keyCode) {
+			case LEFT_KEY:
+				this.left = false;
 				break;
-			case UP_KEY: // Up
-				that.up = false;
+			case UP_KEY:
+				this.up = false;
 				break;
-			case RIGHT_KEY: // Right
-				that.right = false;
+			case RIGHT_KEY:
+				this.right = false;
 				break;
-			case DOWN_KEY: // Down
-				that.down = false;
+			case DOWN_KEY:
+				this.down = false;
 				break;
 		};
 	};
