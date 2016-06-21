@@ -13,7 +13,9 @@ var canvas,         // Canvas DOM element
     gameConstants,
     gameStrings,
     screenMessage,
-    countdownID;
+    countdownID,
+    ball,
+    ballRadius = 10;
 
 
 /**************************************************
@@ -30,7 +32,6 @@ function init() {
     gameState = gameStates.WAITING_FOR_OTHER_PLAYER;
     screenMessage = gameStrings.WAITING_FOR_PLAYER;
 
-
     // Initialise the local player
     try{
         socket = io('http://localhost:8000/',{ transports: ["websocket"] });
@@ -38,7 +39,6 @@ function init() {
         screenMessage = gameStrings.UNABLE_TO_CONNECT;
         return;
     }
-
 
     // Start listening for events
     setEventHandlers();
@@ -166,7 +166,13 @@ function resetScores() {
 };
 
 function startRound() {
-
+    var randomAngle = Math.random()*2*Math.PI - Math.PI;
+        ballVelocity = new Vector([Math.cos(randomAngle), Math.sin(randomAngle)]),
+        ballPos = new Vector([gameConstants.ARENA_WIDTH / 2,
+                              gameConstants.ARENA_HEIGHT / 2]);
+    ball = new Ball(ballPos, ballVelocity, ballRadius);
+    gameState = gameStates.ACTIVE_ROUND;
+    showMessage = false;
 };
 
 function onStartGame() {
@@ -200,6 +206,9 @@ function clearCountdown() {
 **************************************************/
 function gameLoop() {
     update();
+    if(gameState === gameStates.ACTIVE_ROUND){
+        handleCollisions();
+    }
     draw();
 
     // Request a new animation frame using Paul Irish's shim
@@ -216,6 +225,9 @@ function update() {
             x: localPlayer.getPos().x,
             y: localPlayer.getPos().y});
     };
+    if(ball) {
+        ball.update();
+    }
 };
 
 function playerById(id) {
@@ -245,9 +257,80 @@ function draw() {
             gameConstants.ARENA_HEIGHT / 2);
         ctx.restore();
     }
+    if(gameState === gameStates.ACTIVE_ROUND && ball) {
+        ball.draw(ctx);
+    }
     // Draw the local player
     localPlayer.draw(ctx);
     for (var i = 0; i < remotePlayers.length; i++) {
         remotePlayers[i].draw(ctx);
     };
 };
+
+/**************************************************
+** COLLISIONS
+**************************************************/
+function handleCollisions() {
+    var scoringPlayer;
+    if(ballIsCollidingWithWall()) {
+        handleBallToWallCollision();
+    }
+    if(ballIsCollidingWithPlayer()) {
+        handleBallPlayerCollision();
+    }
+    if(pointWasScored()) {
+        handlePointScore();
+    }
+}
+
+function ballIsCollidingWithWall() {
+    var position = ball.getPos();
+    return (position.y <= ballRadius) || (position.y + ballRadius >= 400);
+};
+
+function ballIsCollidingWithPlayer() {
+    return false;
+
+}
+
+function handleBallToWallCollision () {
+    var position = ball.getPos(),
+        currentVel = ball.getVel(),
+        newY,
+        newPos,
+        newVel;
+
+    if(position.y <= ballRadius) {
+        newPos = new Vector([position.x, ballRadius + 1]);
+    } else {
+        newPos = new Vector([position.x, 400 - ballRadius - 1]);
+    }
+
+    newVel = new Vector([currentVel.x, -currentVel.y]);
+    ball.setPos(newPos);
+    ball.setVel(newVel);
+};
+
+function handleBallPlayerCollision() {
+    return false;
+};
+
+function pointWasScored() {
+    var ballPos = ball.getPos();
+    return ballPos.x + ballRadius <= 0 || ballPos.x - ballRadius >= gameConstants.ARENA_WIDTH;
+}
+
+function handlePointScore() {
+    gameState = gameStates.PLAYER_SCORED;
+    showMessage = true;
+
+    if(ballPos.x < 0) {
+        screenMessage = "Player on right scored";
+    } else {
+        screenMessage = "Player on left scored";
+    }
+    gameState = gameStates.ACTIVE_ROUND;
+    ball.setPos(new Vector([gameConstants.ARENA_WIDTH / 2, gameConstants.ARENA_HEIGHT / 2]));
+    ball.setVel(new Vector([0.1,0.1]));
+
+}

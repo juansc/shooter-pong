@@ -52,6 +52,10 @@ var Paddle = function(pos, isOnLeft) {
         ctx.fillStyle = isOnLeft() ? "red":"blue";
         ctx.fill();
         ctx.restore();
+        currentPos = getPos();
+        var currentX = 400,//currentPos.elements[0],
+            currentY = 50;//currentPos.elements[1];
+        ctx.save();
     };
 
     var getPointsToDraw = (orientation) => {
@@ -77,11 +81,29 @@ var Paddle = function(pos, isOnLeft) {
         return points;
     }
 
+    var getHitBox = (orientation) => {
+        var points = [],
+            currentPos = getPos(),
+            p1x, p1y, p2x, p2y,
+            p3x, p3y, p4x, p4y;
+
+        p1x = currentPos.x + width*(orientation ? 1: -1);
+        p1y = currentPos.y;
+        p2x = p1x;
+        p2y = p1y + height;
+        points = [
+            {x:p1x,y:p1y},
+            {x:p2x,y:p2y}
+        ];
+        return points;
+    }
+
     return {
         getPos: getPos,
         setPos: setPos,
         update: update,
         draw: draw,
-        isOnLeft: isOnLeft
+        isOnLeft: isOnLeft,
+        hitBox: () => {return getHitBox(orientation);}
     }
 };
