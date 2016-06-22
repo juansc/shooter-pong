@@ -26,7 +26,7 @@ onClientDisconnect = ->
 
 
 onNewPlayer = (data) ->
-  newPlayer = new Player data.x, data.y, data.isOnLeft
+  newPlayer = new Player data.x, data.y, data.isHost
   newPlayer.id = this.id
   room = player_current_room[this.id]
   newPlayer.setGameSession room_sessions[room]
@@ -36,7 +36,7 @@ onNewPlayer = (data) ->
     id: newPlayer.id,
     x: newPlayer.getX()
     y: newPlayer.getY()
-    isOnLeft: data.isOnLeft
+    isHost: data.isHost
   for player in players
     # This emits to only the current player
     if player_current_room[player.id] is room
@@ -44,7 +44,7 @@ onNewPlayer = (data) ->
         id: player.id
         x: player.getX()
         y: player.getY()
-        isOnLeft: player.isOnLeft()
+        isHost: player.isHost()
   players.push newPlayer
 
 
@@ -79,7 +79,7 @@ addClientToRoom = (client) ->
       client.join "room #{room_number}"
       player_current_room[client.id] = room_number
       console.log "Added #{client.id} to room #{room_number}"
-      client.emit 'added to room', isOnLeft: first_in_room
+      client.emit 'added to room', isHost: first_in_room
       found_room = true
       room_full = not first_in_room
       return [found_room, room_number, room_full]
