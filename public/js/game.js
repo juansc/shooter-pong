@@ -1,7 +1,6 @@
 // TODO:
-// 1) Add scoring system.
-// 2) Add all responsibilities to host player.
-// 3) Make all variables invisible
+// 1) Clean up code.
+// 2) Make all variables invisible
 
 /**************************************************
 ** GAME VARIABLES
@@ -10,7 +9,7 @@ var canvas,         // Canvas DOM element
     ctx,            // Canvas rendering context
     keys,           // Keyboard input
     localPlayer,    // Local player
-    remotePlayers = [],  // Remote players
+    remotePlayer,  // Remote players
     socket,         // Player socket
     gameState,
     showMessage = true,
@@ -29,7 +28,6 @@ var canvas,         // Canvas DOM element
 ** GAME INITIALISATION
 **************************************************/
 function init() {
-    // Declare the canvas and rendering context
     canvas = document.getElementById("gameCanvas");
     ctx = canvas.getContext("2d");
     gameStates = GameStates();
@@ -39,7 +37,6 @@ function init() {
     gameState = gameStates.WAITING_FOR_OTHER_PLAYER;
     screenMessage = gameStrings.WAITING_FOR_PLAYER;
 
-    // Initialise the local player
     try{
         socket = io('http://localhost:8000/',{ transports: ["websocket"] });
     } catch(e) {
@@ -47,10 +44,7 @@ function init() {
         return;
     }
 
-    // Start listening for events
     setEventHandlers();
-    remotePlayers = [];
-
     console.log(socket);
 };
 
@@ -59,11 +53,9 @@ function init() {
 ** GAME EVENT HANDLERS
 **************************************************/
 var setEventHandlers = function() {
-    // Keyboard
     window.addEventListener("keydown", onKeydown, false);
     window.addEventListener("keyup", onKeyup, false);
 
-    // Window resize
     //window.addEventListener("resize", onResize, true);
 
     socket.on("connect", onSocketConnected);
@@ -80,12 +72,17 @@ var setEventHandlers = function() {
     socket.on("begin round", onBeginRound);
 };
 
-// Keyboard key down
 function onKeydown(e) {
     if (localPlayer) {
         keys.onKeyDown(e);
+    }
+}
+
+function onKeyup(e) {
+    if (localPlayer) {
+        keys.onKeyUp(e);
     };
-};
+}
 
 function onGameOver() {
     return false;
@@ -95,72 +92,23 @@ function onBeginRound() {
     return false;
 }
 
-// Keyboard key up
-function onKeyup(e) {
-    if (localPlayer) {
-        keys.onKeyUp(e);
-    };
-};
-
-// Browser window resize
 function onResize(e) {
-    // Maximise the canvas
     canvas.width = ARENA_WIDTH;
     canvas.height = ARENA_HEIGHT;
-};
+}
 
 function onSocketConnected() {
     console.log("Connected to socket server");
-};
+}
 
 function onSocketDisconnect() {
     console.log("Disconnected from socket server");
-};
-
-function onNewPlayer(data) {
-    console.log("New player connected: " + data.id);
-    var newPlayer = new Paddle(new Vector([data.x, data.y]), data.isHost);
-    newPlayer.id = data.id;
-    remotePlayers.push(newPlayer);
-};
-
-function onMovePlayer(data) {
-    var playerToMove = playerById(data.id);
-
-    if (!playerToMove) {
-        console.log("Player not found: "+data.id);
-        return;
-    };
-
-    playerToMove.setPos(new Vector([data.x, data.y]));
-
-};
-
-function onPlayerScore(data) {
-    playerScores = data.eventData.scores
-};
-
-function onMoveBall(data) {
-    ball.setPos(new Vector([data.x, data.y]));
 }
-
-function onRemovePlayer(data) {
-    console.log(data)
-    var playerToRemove = playerById(data.id);
-
-    if (!playerToRemove) {
-        console.log("Player not found: " + data.id);
-        return;
-    };
-
-    remotePlayers.splice(remotePlayers.indexOf(playerToRemove), 1);
-};
 
 function onAddedToRoom(data) {
     var playerX, playerY;
 
     isHost = data.isHost;
-
     playerX = isHost ? gameConstants.STARTING_X_LEFT : gameConstants.STARTING_X_RIGHT;
     playerY = gameConstants.STARTING_Y;
     localPlayer = new Paddle(new Vector([playerX, playerY]), isHost);
@@ -173,25 +121,61 @@ function onAddedToRoom(data) {
 
     keys = new Keys();
     gameLoop();
-};
+}
 
-function hideWaitingForPlayerMessage() {
-    showMessage = false;
-    console.log("Hid waiting for players message");
+function onNewPlayer(data) {
+    console.log("New player connected: " + data.id);
+    var newPlayer = new Paddle(new Vector([data.x, data.y]), data.isHost);
+    newPlayer.id = data.id;
+    remotePlayer = newPlayer;
+}
+
+function onMovePlayer(data) {
+    var playerToMove = playerById(data.id);
+
+    if (!playerToMove) {
+        return console.log("Player not found: " + data.id);
+    }
+
+    playerToMove.setPos(new Vector([data.x, data.y]));
+}
+
+function onStartGame() {
+    screenMessage = gameStrings.STARTING_GAME;
+    gameState = gameStates.STARTING_GAME;
+    startCountdown(startGame);
+}
+
+function onPlayerScore(data) {
+    playerScores = data.eventData.scores;
+}
+
+function onMoveBall(data) {
+    ball.setPos(new Vector([data.x, data.y]));
+}
+
+function onRemovePlayer(data) {
+    var playerToRemove = playerById(data.id);
+
+    if (!playerToRemove) {
+        return console.log("Player not found: " + data.id);
+    }
+
+    if(playerToRemove === remotePlayer) {
+        remotePlayer = null;
+    }
 }
 
 function startGame() {
     console.log("Game is starting");
-    screenMessage = "Game is starting!";
+    screenMessage = gameStrings.STARTING_GAME;
     resetScores();
-    //showScores();
     startRound();
-    console.log("We go here");
-};
+}
 
 function resetScores() {
-    var scores = [0,0];
-};
+    playerScores = [0,0];
+}
 
 function startRound() {
     var randomAngle = Math.random()*2*Math.PI - Math.PI;
@@ -207,13 +191,7 @@ function startRound() {
 
     gameState = gameStates.ACTIVE_ROUND;
     showMessage = false;
-};
-
-function onStartGame() {
-    screenMessage = gameStrings.STARTING_GAME;
-    gameState = gameStates.STARTING_GAME;
-    startCountdown(startGame);
-};
+}
 
 function startCountdown(callback) {
     var counter = 4;
@@ -226,14 +204,12 @@ function startCountdown(callback) {
         }
     }
     countdownID = window.setInterval(countdown, 1000);
-};
+}
 
 function clearCountdown() {
     console.log("Cleared countdown");
     window.clearInterval(countdownID);
-};
-
-
+}
 
 /**************************************************
 ** GAME ANIMATION LOOP
@@ -244,10 +220,9 @@ function gameLoop() {
         handleCollisions();
     }
     draw();
-
     // Request a new animation frame using Paul Irish's shim
     window.requestAnimFrame(gameLoop);
-};
+}
 
 
 /**************************************************
@@ -267,56 +242,72 @@ function update() {
             y: ball.getPos().y
         });
     }
-};
+}
 
 function playerById(id) {
-    var i;
-    for (i = 0; i < remotePlayers.length; i++) {
-        if (remotePlayers[i].id == id) {
-            return remotePlayers[i];
-        }
-    };
-
-    return false;
-};
+    if(id === remotePlayer.id) {
+        return remotePlayer;
+    } else if(id === localPlayer.id) {
+        return localPlayer;
+    } else {
+        return false;
+    }
+}
 
 /**************************************************
 ** GAME DRAW
 **************************************************/
 function draw() {
-    // Wipe the canvas clean
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     if(showMessage) {
-        ctx.save();
-        ctx.font = "30px Comic Sans MS";
-        ctx.fillStyle = "red";
-        ctx.textAlign = "center";
-        ctx.fillText(screenMessage,
-            gameConstants.ARENA_WIDTH / 2,
-            gameConstants.ARENA_HEIGHT / 2);
-        ctx.restore();
+        displayMessage();
     }
+
     if(gameState === gameStates.ACTIVE_ROUND && ball) {
         ball.draw(ctx);
     }
-    // Draw the local player
+
     localPlayer.draw(ctx);
-    for (var i = 0; i < remotePlayers.length; i++) {
-        remotePlayers[i].draw(ctx);
-    };
+
+    if(remotePlayer) {
+        remotePlayer.draw(ctx);
+    }
+
     if( gameState === gameStates.ACTIVE_ROUND ||
         gameState === gameStates.ROUND_START ||
         gameState === gameStates.PLAYER_SCORED ||
         gameState === gameStates.GAME_OVER) {
         displayScores(playerScores);
     }
-};
+}
+
+function displayMessage() {
+    ctx.save();
+    ctx.font = "30px Comic Sans MS";
+    ctx.fillStyle = "red";
+    ctx.textAlign = "center";
+    ctx.fillText(screenMessage,
+        gameConstants.ARENA_WIDTH / 2,
+        gameConstants.ARENA_HEIGHT / 2);
+    ctx.restore();
+}
+
+function displayScores(scores) {
+    ctx.save();
+    ctx.font = "45px Comic Sans MS";
+    ctx.fillStyle = "red";
+    ctx.textAlign = "center";
+    ctx.fillText(scores[0] + " - " + scores[1],
+        gameConstants.ARENA_WIDTH / 2,
+        gameConstants.ARENA_HEIGHT / 4);
+    ctx.restore();
+}
 
 /**************************************************
 ** COLLISIONS
 **************************************************/
 function handleCollisions() {
-    var scoringPlayer;
     if(ballIsCollidingWithWall()) {
         handleBallToWallCollision();
     }
@@ -331,15 +322,7 @@ function handleCollisions() {
 function ballIsCollidingWithWall() {
     var position = ball.getPos();
     return (position.y <= ballRadius) || (position.y + ballRadius >= 400);
-};
-
-function ballIsCollidingWithPlayer() {
-    var ballPos = ball.getPos();
-
-    return localPlayer.collidesWithBall(ballPos, ballRadius) ||
-            remotePlayers[0].collidesWithBall(ballPos, ballRadius);
 }
-
 
 function handleBallToWallCollision () {
     var position = ball.getPos(),
@@ -357,53 +340,49 @@ function handleBallToWallCollision () {
     newVel = new Vector([currentVel.x, -currentVel.y]);
     ball.setPos(newPos);
     ball.setVel(newVel);
-};
+}
+
+function ballIsCollidingWithPlayer() {
+    var ballPos = ball.getPos();
+
+    return localPlayer.collidesWithBall(ballPos, ballRadius) ||
+            remotePlayer.collidesWithBall(ballPos, ballRadius);
+}
 
 function handleBallPlayerCollision() {
-    console.log("Ball collided");
     var ballPos = ball.getPos(),
-        playerCenter,
         currentVel = ball.getVel(),
+        playerCenter,
         newBallVel;
 
     if(ballPos.x < 100) {
         playerCenter  = localPlayer.getCenter();
     } else {
-        playerCenter = remotePlayers[0].getCenter();
+        playerCenter = remotePlayer.getCenter();
     }
 
     newBallVel = ballPos.minus(playerCenter);
     newBallVel.toMagnitude(currentVel.magnitude * 1.05);
 
     ball.setVel(newBallVel);
-};
+}
 
 function pointWasScored() {
     var ballPos = ball.getPos();
     return ballPos.x + ballRadius <= 0 || ballPos.x - ballRadius >= gameConstants.ARENA_WIDTH;
-};
-
-function displayScores(scores) {
-    ctx.save();
-    ctx.font = "45px Comic Sans MS";
-    ctx.fillStyle = "red";
-    ctx.textAlign = "center";
-    ctx.fillText(scores[0] + " - " + scores[1],
-        gameConstants.ARENA_WIDTH / 2,
-        gameConstants.ARENA_HEIGHT / 4);
-    ctx.restore();
-};
+}
 
 function handlePointScore() {
-    gameState = gameStates.PLAYER_SCORED;
-    showMessage = true;
     var ballPos = ball.getPos();
 
+    gameState = gameStates.PLAYER_SCORED;
+    showMessage = true;
+
     if(ballPos.x < 10) {
-        screenMessage = "Player on right scored";
+        screenMessage = gameStrings.PLAYER_2_SCORED;
         playerScores[1] += 1;
     } else {
-        screenMessage = "Player on left scored";
+        screenMessage = gameStrings.PLAYER_1_SCORED;
         playerScores[0] += 1;
     }
 
@@ -414,5 +393,4 @@ function handlePointScore() {
         }
     });
     window.setTimeout(startCountdown, 2000, startRound);
-
-};
+}
