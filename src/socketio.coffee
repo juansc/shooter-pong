@@ -99,11 +99,17 @@ onClientConnected = (client) ->
   if room_full
     socket.in("room #{room}").emit 'start game'
 
+onBroadcastEvent = (clientEvent) ->
+  room = player_current_room[this.id]
+  this.broadcast.to("room #{room}").emit clientEvent.eventName,
+    eventData: clientEvent.data
+
 addCallbacksToClient = (client) ->
   client.on 'disconnect', onClientDisconnect
   client.on 'new player', onNewPlayer
   client.on 'move player', onMovePlayer
   client.on 'move ball', onMoveBall
+  client.on 'broadcast event', onBroadcastEvent
   client.on 'ready up', onReadyUp
 
 exports.listen = (port) ->

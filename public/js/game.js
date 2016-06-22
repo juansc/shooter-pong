@@ -10,7 +10,7 @@ var canvas,         // Canvas DOM element
     ctx,            // Canvas rendering context
     keys,           // Keyboard input
     localPlayer,    // Local player
-    remotePlayers,  // Remote players
+    remotePlayers = [],  // Remote players
     socket,         // Player socket
     gameState,
     showMessage = true,
@@ -21,7 +21,8 @@ var canvas,         // Canvas DOM element
     countdownID,
     ball,
     ballRadius = 10,
-    isHost = false;
+    isHost = false,
+    playerScores = [0, 0];
 
 
 /**************************************************
@@ -73,6 +74,10 @@ var setEventHandlers = function() {
     socket.on("remove player", onRemovePlayer);
     socket.on("added to room", onAddedToRoom);
     socket.on("start game", onStartGame);
+    // Game state change events
+    socket.on("player score", onPlayerScore);
+    socket.on("game over", onGameOver);
+    socket.on("begin round", onBeginRound);
 };
 
 // Keyboard key down
@@ -81,6 +86,14 @@ function onKeydown(e) {
         keys.onKeyDown(e);
     };
 };
+
+function onGameOver() {
+    return false;
+}
+
+function onBeginRound() {
+    return false;
+}
 
 // Keyboard key up
 function onKeyup(e) {
@@ -121,6 +134,10 @@ function onMovePlayer(data) {
 
     playerToMove.setPos(new Vector([data.x, data.y]));
 
+};
+
+function onPlayerScore(data) {
+    playerScores = data.eventData.scores
 };
 
 function onMoveBall(data) {
@@ -287,6 +304,12 @@ function draw() {
     for (var i = 0; i < remotePlayers.length; i++) {
         remotePlayers[i].draw(ctx);
     };
+    if( gameState === gameStates.ACTIVE_ROUND ||
+        gameState === gameStates.ROUND_START ||
+        gameState === gameStates.PLAYER_SCORED ||
+        gameState === gameStates.GAME_OVER) {
+        displayScores(playerScores);
+    }
 };
 
 /**************************************************
@@ -357,7 +380,18 @@ function handleBallPlayerCollision() {
 function pointWasScored() {
     var ballPos = ball.getPos();
     return ballPos.x + ballRadius <= 0 || ballPos.x - ballRadius >= gameConstants.ARENA_WIDTH;
-}
+};
+
+function displayScores(scores) {
+    ctx.save();
+    ctx.font = "45px Comic Sans MS";
+    ctx.fillStyle = "red";
+    ctx.textAlign = "center";
+    ctx.fillText(scores[0] + " - " + scores[1],
+        gameConstants.ARENA_WIDTH / 2,
+        gameConstants.ARENA_HEIGHT / 4);
+    ctx.restore();
+};
 
 function handlePointScore() {
     gameState = gameStates.PLAYER_SCORED;
@@ -366,10 +400,18 @@ function handlePointScore() {
 
     if(ballPos.x < 10) {
         screenMessage = "Player on right scored";
+        playerScores[1] += 1;
     } else {
         screenMessage = "Player on left scored";
+        playerScores[0] += 1;
     }
 
+    socket.emit("broadcast event", {
+        eventName: "player score",
+        data: {
+            scores: playerScores
+        }
+    });
     window.setTimeout(startCountdown, 2000, startRound);
 
 };
