@@ -113,6 +113,11 @@ class Vector {
         this.scale(1.0 / this.magnitude);
     }
 
+    toMagnitude(magnitude) {
+        this.normalize();
+        this.scale(magnitude);
+    }
+
     normalCopy() {
         var new_vect = this.clone();
         new_vect.normalize();

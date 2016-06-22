@@ -58,7 +58,7 @@ var Paddle = function(pos, isOnLeft) {
         ctx.save();
     };
 
-    var getPointsToDraw = (orientation) => {
+    var getPointsToDraw = () => {
         var points = [],
             currentPos = getPos(),
             p1x, p1y, p2x, p2y,
@@ -68,7 +68,7 @@ var Paddle = function(pos, isOnLeft) {
         p1y = currentPos.y;
         p2x = p1x;
         p2y = p1y + height;
-        p3x = p2x + width*(orientation ? 1: -1);
+        p3x = p2x + width*(isOnLeft() ? 1: -1);
         p3y = p2y - ySlant;
         p4x = p3x;
         p4y = p1y + ySlant;
@@ -81,22 +81,28 @@ var Paddle = function(pos, isOnLeft) {
         return points;
     }
 
-    var getHitBox = (orientation) => {
-        var points = [],
-            currentPos = getPos(),
-            p1x, p1y, p2x, p2y,
-            p3x, p3y, p4x, p4y;
+    var collidesWithBall = (ballPos, ballRadius) => {
+        var currentPos = getPos(),
+            ballX = ballPos.x,
+            ballY = ballPos.y,
+            leftLimit = currentPos.x - ballRadius,
+            rightLimit = currentPos.x + width + ballRadius;
 
-        p1x = currentPos.x + width*(orientation ? 1: -1);
-        p1y = currentPos.y;
-        p2x = p1x;
-        p2y = p1y + height;
-        points = [
-            {x:p1x,y:p1y},
-            {x:p2x,y:p2y}
-        ];
-        return points;
+        if(leftLimit <= ballX && ballX <= rightLimit) {
+            var dx = (ballX - leftLimit) / (rightLimit - leftLimit),
+                dy = (1 - dx)*(ySlant);
+                bottomLimit = height - dy;
+                topLimit = currentPos.y + dy;
+
+            return topLimit <= ballY && ballY <= bottomLimit;
+        }
+
+        return false;
     }
+
+    var getCenter = () => {
+        return new Vector([getPos().x + width / 2, getPos().y + height / 2]);
+    };
 
     return {
         getPos: getPos,
@@ -104,6 +110,7 @@ var Paddle = function(pos, isOnLeft) {
         update: update,
         draw: draw,
         isOnLeft: isOnLeft,
-        hitBox: () => {return getHitBox(orientation);}
+        getCenter: getCenter,
+        collidesWithBall: collidesWithBall
     }
 };

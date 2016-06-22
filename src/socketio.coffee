@@ -47,6 +47,11 @@ onNewPlayer = (data) ->
         isHost: player.isHost()
   players.push newPlayer
 
+onMoveBall = (data) ->
+  room = player_current_room[this.id]
+  this.broadcast.to("room #{room}").emit "move ball",
+    x: data.x
+    y: data.y
 
 onMovePlayer = (data) ->
   [movePlayer, ind] = playerByID this.id
@@ -98,6 +103,7 @@ addCallbacksToClient = (client) ->
   client.on 'disconnect', onClientDisconnect
   client.on 'new player', onNewPlayer
   client.on 'move player', onMovePlayer
+  client.on 'move ball', onMoveBall
   client.on 'ready up', onReadyUp
 
 exports.listen = (port) ->

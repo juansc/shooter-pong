@@ -1,7 +1,7 @@
 // TODO:
-// 1) Clean up transitions of change of state.
-// 2) Add scoring system.
-// 3) Add all responsibilities to host player.
+// 1) Add scoring system.
+// 2) Add all responsibilities to host player.
+// 3) Make all variables invisible
 
 /**************************************************
 ** GAME VARIABLES
@@ -69,6 +69,7 @@ var setEventHandlers = function() {
     socket.on("disconnect", onSocketDisconnect);
     socket.on("new player", onNewPlayer);
     socket.on("move player", onMovePlayer);
+    socket.on("move ball", onMoveBall);
     socket.on("remove player", onRemovePlayer);
     socket.on("added to room", onAddedToRoom);
     socket.on("start game", onStartGame);
@@ -121,6 +122,10 @@ function onMovePlayer(data) {
     playerToMove.setPos(new Vector([data.x, data.y]));
 
 };
+
+function onMoveBall(data) {
+    ball.setPos(new Vector([data.x, data.y]));
+}
 
 function onRemovePlayer(data) {
     console.log(data)
@@ -218,7 +223,7 @@ function clearCountdown() {
 **************************************************/
 function gameLoop() {
     update();
-    if(gameState === gameStates.ACTIVE_ROUND){
+    if(gameState === gameStates.ACTIVE_ROUND && isHost){
         handleCollisions();
     }
     draw();
@@ -235,10 +240,15 @@ function update() {
     if (localPlayer.update(keys)) {
         socket.emit("move player", {
             x: localPlayer.getPos().x,
-            y: localPlayer.getPos().y});
+            y: localPlayer.getPos().y}
+        );
     };
-    if(ball) {
+    if(isHost && gameState === gameStates.ACTIVE_ROUND && ball) {
         ball.update();
+        socket.emit("move ball", {
+            x: ball.getPos().x,
+            y: ball.getPos().y
+        });
     }
 };
 
@@ -301,9 +311,12 @@ function ballIsCollidingWithWall() {
 };
 
 function ballIsCollidingWithPlayer() {
-    return false;
+    var ballPos = ball.getPos();
 
+    return localPlayer.collidesWithBall(ballPos, ballRadius) ||
+            remotePlayers[0].collidesWithBall(ballPos, ballRadius);
 }
+
 
 function handleBallToWallCollision () {
     var position = ball.getPos(),
@@ -324,7 +337,21 @@ function handleBallToWallCollision () {
 };
 
 function handleBallPlayerCollision() {
-    return false;
+    var ballPos = ball.getPos(),
+        playerCenter,
+        currentVel = ball.getVel(),
+        newBallVel;
+
+    if(ballPos.x < 100) {
+        playerCenter  = localPlayer.getCenter();
+    } else {
+        playerCenter = remotePlayers[0].getCenter();
+    }
+
+    newBallVel = ballPos.minus(playerCenter);
+    newBallVel.toMagnitude(currentVel.magnitude * 1.05);
+
+    ball.setVel(newBallVel);
 };
 
 function pointWasScored() {
