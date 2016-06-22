@@ -1,3 +1,8 @@
+// TODO:
+// 1) Clean up transitions of change of state.
+// 2) Add scoring system.
+// 3) Add all responsibilities to host player.
+
 /**************************************************
 ** GAME VARIABLES
 **************************************************/
@@ -15,7 +20,8 @@ var canvas,         // Canvas DOM element
     screenMessage,
     countdownID,
     ball,
-    ballRadius = 10;
+    ballRadius = 10,
+    isHost = false;
 
 
 /**************************************************
@@ -99,7 +105,7 @@ function onSocketDisconnect() {
 
 function onNewPlayer(data) {
     console.log("New player connected: " + data.id);
-    var newPlayer = new Paddle(new Vector([data.x, data.y]), data.isOnLeft);
+    var newPlayer = new Paddle(new Vector([data.x, data.y]), data.isHost);
     newPlayer.id = data.id;
     remotePlayers.push(newPlayer);
 };
@@ -129,22 +135,22 @@ function onRemovePlayer(data) {
 };
 
 function onAddedToRoom(data) {
-    var isOnLeft = data.isOnLeft,
-        playerX, playerY;
+    var playerX, playerY;
 
-    playerX = isOnLeft ? gameConstants.STARTING_X_LEFT : gameConstants.STARTING_X_RIGHT;
+    isHost = data.isHost;
+
+    playerX = isHost ? gameConstants.STARTING_X_LEFT : gameConstants.STARTING_X_RIGHT;
     playerY = gameConstants.STARTING_Y;
-    localPlayer = new Paddle(new Vector([playerX, playerY]), isOnLeft);
+    localPlayer = new Paddle(new Vector([playerX, playerY]), isHost);
 
     socket.emit("new player", {
         x: localPlayer.getPos().x,
         y: localPlayer.getPos().y,
-        isOnLeft: isOnLeft
+        isHost: isHost
     });
 
     keys = new Keys();
     gameLoop();
-
 };
 
 function hideWaitingForPlayerMessage() {
@@ -170,7 +176,13 @@ function startRound() {
         ballVelocity = new Vector([Math.cos(randomAngle), Math.sin(randomAngle)]),
         ballPos = new Vector([gameConstants.ARENA_WIDTH / 2,
                               gameConstants.ARENA_HEIGHT / 2]);
-    ball = new Ball(ballPos, ballVelocity, ballRadius);
+    if(ball) {
+        ball.setPos(ballPos);
+        ball.setVel(ballVelocity);
+    } else {
+        ball = new Ball(ballPos, ballVelocity, ballRadius);
+    }
+
     gameState = gameStates.ACTIVE_ROUND;
     showMessage = false;
 };
@@ -178,17 +190,17 @@ function startRound() {
 function onStartGame() {
     screenMessage = gameStrings.STARTING_GAME;
     gameState = gameStates.STARTING_GAME;
-    startCountdown();
+    startCountdown(startGame);
 };
 
-function startCountdown() {
+function startCountdown(callback) {
     var counter = 4;
     function countdown() {
         counter--;
         screenMessage = counter;
         if(counter === 0) {
             clearCountdown();
-            startGame();
+            callback();
         }
     }
     countdownID = window.setInterval(countdown, 1000);
@@ -323,14 +335,14 @@ function pointWasScored() {
 function handlePointScore() {
     gameState = gameStates.PLAYER_SCORED;
     showMessage = true;
+    var ballPos = ball.getPos();
 
-    if(ballPos.x < 0) {
+    if(ballPos.x < 10) {
         screenMessage = "Player on right scored";
     } else {
         screenMessage = "Player on left scored";
     }
-    gameState = gameStates.ACTIVE_ROUND;
-    ball.setPos(new Vector([gameConstants.ARENA_WIDTH / 2, gameConstants.ARENA_HEIGHT / 2]));
-    ball.setVel(new Vector([0.1,0.1]));
 
-}
+    window.setTimeout(startCountdown, 2000, startRound);
+
+};
