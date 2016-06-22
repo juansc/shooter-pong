@@ -360,6 +360,7 @@ function handleBallToWallCollision () {
 };
 
 function handleBallPlayerCollision() {
+    console.log("Ball collided");
     var ballPos = ball.getPos(),
         playerCenter,
         currentVel = ball.getVel(),

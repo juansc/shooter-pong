@@ -17,30 +17,25 @@ var Paddle = function(pos, isOnLeft) {
     var setPos = (newPos) => {pos = newPos};
     var isOnLeft = () => {return orientation === ON_LEFT};
 
-    var collidingWithWall = () => {return false;}
-
     var update = (keys) => {
         var currentPos = getPos(),
             prevY = currentPos.elements[1],
             positionChanged = true;
 
-        if(collidingWithWall()) {
-            positionChanged = handleWallCollision();
+
+        if (keys.up && !keys.down) {
+            currentPos.elements[1] = Math.max(prevY - speed, MIN_Y);
+        } else if (keys.down && !keys.up) {
+            currentPos.elements[1] = Math.min(prevY + speed, MAX_Y);
         } else{
-            if (keys.up && !keys.down) {
-                currentPos.elements[1] = Math.max(prevY - speed, MIN_Y);
-            } else if (keys.down && !keys.up) {
-                currentPos.elements[1] = Math.min(prevY + speed, MAX_Y);
-            } else{
-                positionChanged = false;
-            };
-        }
+            positionChanged = false;
+        };
 
         return positionChanged;
     };
 
     var draw = (ctx) => {
-        var points = getPointsToDraw(isOnLeft());
+        var points = getPointsToDraw();
 
         ctx.save();
         ctx.beginPath();
@@ -64,14 +59,27 @@ var Paddle = function(pos, isOnLeft) {
             p1x, p1y, p2x, p2y,
             p3x, p3y, p4x, p4y;
 
-        p1x = currentPos.x;
-        p1y = currentPos.y;
-        p2x = p1x;
-        p2y = p1y + height;
-        p3x = p2x + width*(isOnLeft() ? 1: -1);
-        p3y = p2y - ySlant;
-        p4x = p3x;
-        p4y = p1y + ySlant;
+        if(isOnLeft()) {
+            p1x = currentPos.x;
+            p1y = currentPos.y;
+            p2x = p1x;
+            p2y = p1y + height;
+            p3x = p2x + width;
+            p3y = p2y - ySlant;
+            p4x = p3x;
+            p4y = p1y + ySlant;
+        } else {
+            p1x = currentPos.x;
+            p1y = currentPos.y + ySlant;
+            p2x = p1x;
+            p2y = currentPos.y + height - ySlant;
+            p3x = p2x + width;
+            p3y = currentPos.y + height;
+            p4x = p3x;
+            p4y = currentPos.y;
+        }
+
+
         points = [
             {x:p1x,y:p1y},
             {x:p2x,y:p2y},
@@ -91,7 +99,7 @@ var Paddle = function(pos, isOnLeft) {
         if(leftLimit <= ballX && ballX <= rightLimit) {
             var dx = (ballX - leftLimit) / (rightLimit - leftLimit),
                 dy = (1 - dx)*(ySlant);
-                bottomLimit = height - dy;
+                bottomLimit = currentPos.y + height - dy;
                 topLimit = currentPos.y + dy;
 
             return topLimit <= ballY && ballY <= bottomLimit;
