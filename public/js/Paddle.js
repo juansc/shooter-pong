@@ -40,9 +40,9 @@ var Paddle = function(pos, isOnLeft) {
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(points[0].x, points[0].y);
-        ctx.lineTo(points[1].x, points[1].y);
-        ctx.lineTo(points[2].x, points[2].y);
-        ctx.lineTo(points[3].x, points[3].y);
+        for(var i = 1; i < points.length; i+= 1) {
+            ctx.lineTo(points[i].x, points[i].y);
+        }
         ctx.closePath();
         ctx.fillStyle = isOnLeft() ? "red":"blue";
         ctx.fill();

@@ -21,7 +21,8 @@ var canvas,         // Canvas DOM element
     ball,
     ballRadius = 10,
     isHost = false,
-    playerScores = [0, 0];
+    playerScores = [0, 0],
+    bullets = [0,0];
 
 
 /**************************************************
@@ -235,12 +236,31 @@ function update() {
             y: localPlayer.getPos().y}
         );
     };
+    if(keys.space) {
+        var ind = isHost ? 0 : 1,
+            facesLeft,
+            paddleCenter;
+        if(!bullets[ind]) {
+            facesLeft = !isHost;
+            paddleCenter = localPlayer.getCenter();
+            bullets[ind] = new Bullet(paddleCenter, facesLeft);
+            socket.emit("new bullet", {
+                id: localPlayer.id,
+                bullet: bullets[ind]
+            });
+        }
+    }
     if(isHost && gameState === gameStates.ACTIVE_ROUND && ball) {
         ball.update();
         socket.emit("move ball", {
             x: ball.getPos().x,
             y: ball.getPos().y
         });
+    }
+    for(var bullet of bullets) {
+        if(bullet) {
+            bullet.update();
+        }
     }
 }
 
@@ -272,6 +292,11 @@ function draw() {
 
     if(remotePlayer) {
         remotePlayer.draw(ctx);
+    }
+    for(var i = 0; i < bullets.length; i+= 1) {
+        if(bullets[i]) {
+            bullets[i].draw(ctx);
+        }
     }
 
     if( gameState === gameStates.ACTIVE_ROUND ||
@@ -317,6 +342,7 @@ function handleCollisions() {
     if(pointWasScored()) {
         handlePointScore();
     }
+    handleBulletCollisions();
 }
 
 function ballIsCollidingWithWall() {
@@ -393,4 +419,18 @@ function handlePointScore() {
         }
     });
     window.setTimeout(startCountdown, 2000, startRound);
+}
+
+function handleBulletCollisions() {
+    for(var i = 0; i < bullets.length; i += 1) {
+        var bullet = bullets[i];
+        if(!bullet) {
+            continue;
+        }
+        var bulletPos = bullet.getPos();
+        if(bulletPos.x <= 0 || bulletPos.x >= gameConstants.ARENA_WIDTH) {
+            bullets[i] = null;
+            continue;
+        }
+    }
 }
